@@ -1,0 +1,6 @@
+# Python 3.12
+# --- data + database ---
+pandas==3.1.1
+SQLAlchemy==2.1.9
+psycopg[binary]==3.3.9
+python-dotenv==1.2.4
