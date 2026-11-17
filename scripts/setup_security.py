@@ -51,7 +51,9 @@ def ensure_role(owner_engine, password: str) -> None:
 
 def apply_sql_file(owner_engine) -> None:
     with owner_engine.begin() as conn:
-        conn.exec_driver_sql(SQL_FILE.read_text(encoding="utf-8"))
+        # Execute through the raw psycopg connection without parameters, so a literal '%' in the
+        # SQL (e.g. inside a COMMENT) isn't mistaken for a placeholder.
+        conn.connection.driver_connection.execute(SQL_FILE.read_text(encoding="utf-8"))
     print(f"  applied {SQL_FILE.relative_to(config.PROJECT_ROOT)}")
 
 

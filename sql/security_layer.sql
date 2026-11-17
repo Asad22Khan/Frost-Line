@@ -45,7 +45,7 @@ SELECT
 FROM public.tbl_sc_fleet_hist_raw;
 
 COMMENT ON VIEW fde_views.vw_active_fleet IS
-    'Hourly fleet telemetry snapshots, Southern California, 2021-01-01 to 2024-08-29. One row per vehicle reading; there is no vehicle or shipment ID.';
+    'Hourly fleet telemetry snapshots, 2021-01-01 to 2024-08-29 (32,065 rows). One row per vehicle reading; there is no vehicle or shipment ID. GPS points span the continental US (latitude 30 to 50, longitude -120 to -70); only about 2% fall in Southern California, so always filter locations with latitude/longitude ranges.';
 
 COMMENT ON COLUMN fde_views.vw_active_fleet.event_time                      IS 'Timestamp of the reading (UTC, hourly)';
 COMMENT ON COLUMN fde_views.vw_active_fleet.latitude                        IS 'Vehicle GPS latitude';
