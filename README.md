@@ -13,7 +13,7 @@ A Southern California logistics company stores years of fleet telemetry in a leg
 ## Roadmap
 
 - [x] **Phase 0:** Legacy system: serverless PostgreSQL (Neon) with fleet telemetry loaded
-- [ ] **Phase 1:** SOP ingestion into a vector database (RAG)
+- [x] **Phase 1:** SOP ingestion into a vector database (RAG)
 - [x] **Phase 2:** Data security: read-only agent role over a semantic view
 - [ ] **Phase 3:** Agent tools: text-to-SQL, live corridor weather, SOP search
 - [ ] **Phase 4:** LangGraph ReAct orchestrator
@@ -38,6 +38,26 @@ python scripts/ingest_legacy_data.py
 ```
 
 This loads all 32,065 records into `public.tbl_sc_fleet_hist_raw`, using terse legacy column names (`iot_temp_val_c`, `risk_cls_txt`, `prt_cng_lvl`, …) that mirror what a real client's system looks like. Rows are streamed with PostgreSQL `COPY`, which takes about 10 seconds.
+
+### Phase 1: build the SOP knowledge base
+
+```bash
+python scripts/ingest_sop_pinecone.py                    # sync data/policy into Pinecone
+python scripts/search_sop.py "What is the temperature rule for fresh perishables?"
+```
+
+Policy documents in `data/policy/` are chunked according to their format:
+
+| Format | Chunking |
+|---|---|
+| `.md` | Split by headings, then into ~600-character pieces. The heading path is embedded with each chunk. |
+| `.txt` | ~600-character pieces with 60-character overlap |
+| `.pdf` | Page by page, with the page number kept |
+| `.csv` / `.xlsx` | One chunk per row |
+
+- **Embeddings:** Pinecone embeds the text server-side (`llama-text-embed-v2`), so no embedding model runs locally or on the app server.
+- **Reranking:** search fetches extra candidates, reranks them with `bge-reranker-v2-m3`, and drops anything below a relevance cutoff. An off-topic question returns nothing instead of an unrelated clause.
+- **Sync:** each file is fingerprinted with SHA-256. Unchanged files are skipped, edited files have their chunks replaced, and files removed from `data/policy/` are removed from the index.
 
 ### Phase 2: lock the database down for the AI agent
 
