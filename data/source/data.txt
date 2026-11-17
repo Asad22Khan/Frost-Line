@@ -1,0 +1,3 @@
+Dataset: Logistics and Supply Chain Dataset (Southern California, Jan 2021 - Aug 2024, hourly)
+Source: https://www.kaggle.com/datasets/datasetengineer/logistics-and-supply-chain-dataset
+File:   data/raw/dynamic_supply_chain_logistics_dataset.csv
