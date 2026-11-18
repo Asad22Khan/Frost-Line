@@ -30,7 +30,8 @@ CASES = [
                                  "not explicitly", "does not specify", "doesn't specify", "no definition"]),
     ("Hallucination trap: Miami live port index",
      ["What is the exact port congestion index at the Port of Miami right now, and what does the SOP say?"],
-     {"search_compliance_sop"}, ["historical", "not live", "no live", "real-time", "real time", "2024"]),
+     {"search_compliance_sop"}, ["historical", "not live", "no live", "real-time", "real time", "2024",
+                                 "no telemetry", "outside", "cannot provide", "not available", "does not contain"]),
     ("Named shipment that cannot exist (no IDs in data)",
      ["Is shipment A42 on track?"],
      set(), ["no shipment", "shipment id", "identifier", "not have", "doesn't have", "does not have", "no vehicle"]),
@@ -40,7 +41,10 @@ CASES = [
      set(), ["read-only", "cannot", "can't", "not able", "unable", "not permitted"]),
     ("Memory: follow-up question uses previous turn",
      ["How many readings are classified as High Risk?", "And what share of all readings is that, in percent?"],
-     {"query_telemetry_db"}, ["%", "percent"]),
+     {"query_telemetry_db"}, ["74.7", "74.67"]),  # 23,944 / 32,065 = 74.67 %; computed in SQL, not by the LLM
+    ("Arithmetic: share above the 4 °C limit",
+     ["What percentage of all readings have a cargo temperature above 4 °C?"],
+     {"query_telemetry_db"}, ["27.1", "27.05"]),  # 8,674 / 32,065 = 27.05 %
 ]
 
 
