@@ -1,0 +1,21 @@
+# Only the app itself goes into the image: no secrets, data files, tests or tooling.
+.env
+.env.*
+.git
+.github
+.venv
+venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.vscode/
+.idea/
+data/
+tests/
+scripts/
+sql/
+*.pdf
+CLAUDE.md
+PROJECT_CONTEXT.md
+test.sql

@@ -18,7 +18,7 @@ A Southern California logistics company stores years of fleet telemetry in a leg
 - [x] **Phase 3:** Agent tools: text-to-SQL, live corridor weather, SOP search
 - [x] **Phase 4:** LangGraph ReAct orchestrator
 - [x] **Phase 5:** Streamlit dispatch console with an in-database audit log
-- [ ] **Phase 6:** Free cloud deployment with CI/CD
+- [x] **Phase 6:** Free cloud deployment with CI/CD
 
 ## Getting started
 
@@ -143,6 +143,23 @@ streamlit run app.py                    # open http://localhost:8501
 | Append-only log | No `UPDATE`/`DELETE`/`TRUNCATE` grants, plus triggers that reject those operations even for the database owner |
 | No owner credentials in the app | The app holds only `AGENT_DATABASE_URL` and `AUDIT_DATABASE_URL`. The "All visitors" view is unlocked with a separate app password (`AUDIT_PAGE_PASSWORD`), compared in constant time, with a 5-minute lockout after 5 failed attempts. |
 | Logging never breaks chat | Events for a question are buffered and written in one round trip when the question finishes, including when it fails. If the audit database is unreachable, the chat still answers and the failure is logged on the server. |
+
+### Phase 6: deployment and CI/CD
+
+```
+push to main ─► GitHub Actions ─┬─ unit tests (offline)
+                                └─ Docker image builds, contains no secrets or data, runs as non-root
+                both pass ──────► move the `deploy` branch to this commit ─► Streamlit Community Cloud publishes it
+```
+
+- **Hosting:** Streamlit Community Cloud (free). It builds from `requirements.txt` on the `deploy` branch, which only GitHub Actions moves. A commit with failing tests can never go live.
+- **Secrets:** set in the Streamlit Cloud app settings. The live app gets only `AGENT_DATABASE_URL` (read-only role), `AUDIT_DATABASE_URL` (append-only role), `PINECONE_API_KEY`, `GROQ_API_KEY` and `AUDIT_PAGE_PASSWORD`. The database owner credential is never deployed.
+- **Docker:** the same app also runs as a container on any Docker host:
+
+```bash
+docker build -t frostline .
+docker run -p 8501:8501 --env-file .env.app frostline    # .env.app holds only the five app secrets
+```
 
 ## Data
 
