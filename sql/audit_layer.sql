@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS fde_audit.agent_audit_log (
     id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     logged_at   timestamptz NOT NULL DEFAULT now(),
     session_id  text        NOT NULL,
+    thread_id   text,
     turn_id     text        NOT NULL,
     event_type  text        NOT NULL CHECK (event_type IN
                     ('question', 'tool_call', 'tool_result', 'answer', 'blocked', 'error')),
@@ -24,11 +25,21 @@ CREATE TABLE IF NOT EXISTS fde_audit.agent_audit_log (
     tool_name   text,
     content     text,
     model       text,
-    latency_ms  integer
+    latency_ms  integer,
+    visitor_label text
 );
+
+-- Columns added after the first release (no-ops on a fresh install).
+ALTER TABLE fde_audit.agent_audit_log ADD COLUMN IF NOT EXISTS thread_id text;
+ALTER TABLE fde_audit.agent_audit_log ADD COLUMN IF NOT EXISTS visitor_label text;
+
+COMMENT ON COLUMN fde_audit.agent_audit_log.session_id IS 'Visitor ID (kept in the page URL as ?v=...)';
+COMMENT ON COLUMN fde_audit.agent_audit_log.thread_id IS 'Conversation ID; "New conversation" starts a new one';
+COMMENT ON COLUMN fde_audit.agent_audit_log.visitor_label IS 'Optional name or company the visitor typed in';
 
 CREATE INDEX IF NOT EXISTS ix_audit_logged_at ON fde_audit.agent_audit_log (logged_at DESC);
 CREATE INDEX IF NOT EXISTS ix_audit_session   ON fde_audit.agent_audit_log (session_id, logged_at);
+CREATE INDEX IF NOT EXISTS ix_audit_thread    ON fde_audit.agent_audit_log (session_id, thread_id, id);
 
 COMMENT ON TABLE fde_audit.agent_audit_log IS
     'Append-only trail of every FrostLine agent step: user question, each tool call and result, final answer, '

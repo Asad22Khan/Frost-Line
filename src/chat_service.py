@@ -21,11 +21,24 @@ def _model_name(msg: AIMessage) -> str | None:
     return (msg.response_metadata or {}).get("model_name")
 
 
-def run_turn(question: str, session_id: str, thread_id: str) -> Iterator[dict]:
+def restore_memory(thread_id: str, pairs: list[tuple[str, str]]) -> bool:
+    """Give the agent back the earlier questions and answers of a conversation restored from the audit log
+    (after a page refresh or an app restart). Does nothing if the agent still remembers the thread."""
+    agent, config = get_agent(), run_config(thread_id)
+    if not pairs or agent.get_state(config).values.get("messages"):
+        return False
+    history = []
+    for question, answer in pairs:
+        history += [HumanMessage(question), AIMessage(answer)]
+    agent.update_state(config, {"messages": history}, as_node="reasoner")
+    return True
+
+
+def run_turn(question: str, session_id: str, thread_id: str, visitor_label: str | None = None) -> Iterator[dict]:
     """Yield events: blocked | tool_call | tool_result | answer | error. Always ends with exactly one of
     blocked, answer or error. The audit trail for the turn is written when the generator finishes."""
     turn_id = uuid.uuid4().hex[:12]
-    trail = AuditTrail(session_id=session_id, turn_id=turn_id)
+    trail = AuditTrail(session_id=session_id, turn_id=turn_id, thread_id=thread_id, visitor_label=visitor_label)
     started = time.perf_counter()
     trail.add("question", question)
 

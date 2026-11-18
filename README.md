@@ -126,7 +126,14 @@ streamlit run app.py                    # open http://localhost:8501
 
 **Dispatch Console:** chat with the agent. While it works, a status line shows which source it is checking (fleet database, live weather, SOP library). Every answer has an expandable list of the exact tool calls: the SQL it ran, the coordinates it checked, the SOP clauses it read, and what each returned. Example questions are offered on an empty chat, and a "New conversation" button clears the agent's memory.
 
-**Audit Log:** a password-protected page listing every question, tool call, tool result, answer, blocked input and error. It shows summary metrics (sessions, questions, tool calls, blocked inputs, rejected SQL, errors, average answer time), filters by time, event type and session, can replay a single question step by step, and exports to CSV.
+**Visitors:** each visitor gets an ID kept in the page URL (`?v=…`), so a refresh keeps their chat, and even after an app restart their conversation is reloaded from the audit log with the agent's memory restored. A notice under the chat box says that conversations are logged. Visitors can optionally enter their name or company, which only the owner sees.
+
+**Audit Log** has two views:
+
+| View | Who | Shows |
+|---|---|---|
+| 👤 My activity | anyone | Only the visitor's **own** conversations as transcripts, plus their raw events and CSV. The filter uses the server-side visitor ID, so there's no input to type someone else's ID into. System-wide totals are shown as counts only. |
+| 🔒 All visitors | owner (`AUDIT_PAGE_PASSWORD`) | Every visitor (name, activity window, question count, first question), each one's conversations as readable transcripts, and the full raw event log with filters and CSV export. |
 
 | Protection | How |
 |---|---|
@@ -134,7 +141,7 @@ streamlit run app.py                    # open http://localhost:8501
 | Rate limit | 8 questions per minute per browser session |
 | Audit role | The log is written by application code, never by the LLM, through `fde_audit_app`, which can only `INSERT` and `SELECT` the log table. It has no access to telemetry. The agent's role cannot see the audit schema at all. |
 | Append-only log | No `UPDATE`/`DELETE`/`TRUNCATE` grants, plus triggers that reject those operations even for the database owner |
-| No owner credentials in the app | The app holds only `AGENT_DATABASE_URL` and `AUDIT_DATABASE_URL`. The audit page is unlocked with a separate app password (`AUDIT_PAGE_PASSWORD`), compared in constant time, with a 5-minute lockout after 5 failed attempts. |
+| No owner credentials in the app | The app holds only `AGENT_DATABASE_URL` and `AUDIT_DATABASE_URL`. The "All visitors" view is unlocked with a separate app password (`AUDIT_PAGE_PASSWORD`), compared in constant time, with a 5-minute lockout after 5 failed attempts. |
 | Logging never breaks chat | Events for a question are buffered and written in one round trip when the question finishes, including when it fails. If the audit database is unreachable, the chat still answers and the failure is logged on the server. |
 
 ## Data

@@ -1,19 +1,49 @@
 """FrostLine web app.   Run:  streamlit run app.py"""
 
+import logging
+import re
 import uuid
 
 import streamlit as st
 
+from src.audit import MAX_LABEL_CHARS, latest_thread
+from src.chat_service import restore_memory
 from src.orchestrator import FALLBACK_MODEL, PRIMARY_MODEL
 from src.ui.audit_page import audit_page
 from src.ui.chat_page import chat_page
+from src.ui.transcript import answered_pairs, messages_from_events
+
+VISITOR_ID = re.compile(r"^[0-9a-f]{12}$")
 
 st.set_page_config(page_title="FrostLine", page_icon="❄️", layout="wide")
 
-if "session_id" not in st.session_state:
-    st.session_state.session_id = uuid.uuid4().hex[:12]
+
+def start_visit() -> None:
+    """Identify the visitor from ?v= in the URL (so a refresh keeps their history) and restore their latest
+    conversation from the audit log. Runs once per browser session."""
+    from_url = st.query_params.get("v", "")
+    session_id = from_url if VISITOR_ID.match(from_url) else uuid.uuid4().hex[:12]
+    st.session_state.session_id = session_id
     st.session_state.thread_id = uuid.uuid4().hex
     st.session_state.messages = []
+    st.session_state.visitor_label = ""
+    if session_id != from_url:
+        return  # brand-new visitor: nothing to restore
+    try:
+        thread_id, label, events = latest_thread(session_id)
+        st.session_state.visitor_label = label or ""
+        if thread_id:
+            messages = messages_from_events(events)
+            st.session_state.thread_id = thread_id
+            st.session_state.messages = messages
+            restore_memory(thread_id, answered_pairs(messages))
+    except Exception as exc:  # audit DB unreachable: start fresh rather than fail
+        logging.getLogger(__name__).warning("Could not restore visitor %s: %s", session_id, exc)
+
+
+if "session_id" not in st.session_state:
+    start_visit()
+st.query_params["v"] = st.session_state.session_id  # keep the visitor ID in the URL on every page
 
 st.markdown(
     """
@@ -42,14 +72,18 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
     st.divider()
-    st.page_link(console, label="Dispatch Console", icon="💬", width="stretch")
-    st.page_link(audit, label="Audit Log", icon="🛡️", width="stretch")
+    visit = {"v": st.session_state.session_id}
+    st.page_link(console, label="Dispatch Console", icon="💬", width="stretch", query_params=visit)
+    st.page_link(audit, label="Audit Log", icon="🛡️", width="stretch", query_params=visit)
     st.divider()
     if st.button("New conversation", icon="🔄", width="stretch"):
         st.session_state.thread_id = uuid.uuid4().hex
         st.session_state.messages = []
         st.rerun()
-    st.caption(f"Session `{st.session_state.session_id}`")
+    st.text_input("Your name or company (optional)", key="visitor_label", max_chars=MAX_LABEL_CHARS,
+                  placeholder="e.g. Sarah · Acme Logistics",
+                  help="Shown only to the app owner in the audit log, next to your questions.")
+    st.caption(f"Visitor `{st.session_state.session_id}`")
     st.caption(f"Model: `{PRIMARY_MODEL}`  \nFallback: `{FALLBACK_MODEL}`")
     st.caption("Fleet data: historical, Jan 2021 – Aug 2024. Weather: live.")
 
