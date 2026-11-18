@@ -6,7 +6,7 @@ import uuid
 
 import streamlit as st
 
-from src.audit import MAX_LABEL_CHARS, latest_thread
+from src.audit import latest_thread
 from src.chat_service import restore_memory
 from src.orchestrator import FALLBACK_MODEL, PRIMARY_MODEL
 from src.ui.audit_page import audit_page
@@ -26,12 +26,10 @@ def start_visit() -> None:
     st.session_state.session_id = session_id
     st.session_state.thread_id = uuid.uuid4().hex
     st.session_state.messages = []
-    st.session_state.visitor_label = ""
     if session_id != from_url:
         return  # brand-new visitor: nothing to restore
     try:
-        thread_id, label, events = latest_thread(session_id)
-        st.session_state.visitor_label = label or ""
+        thread_id, _, events = latest_thread(session_id)
         if thread_id:
             messages = messages_from_events(events)
             st.session_state.thread_id = thread_id
@@ -80,9 +78,6 @@ with st.sidebar:
         st.session_state.thread_id = uuid.uuid4().hex
         st.session_state.messages = []
         st.rerun()
-    st.text_input("Your name or company (optional)", key="visitor_label", max_chars=MAX_LABEL_CHARS,
-                  placeholder="e.g. Sarah · Acme Logistics",
-                  help="Shown only to the app owner in the audit log, next to your questions.")
     st.caption(f"Visitor `{st.session_state.session_id}`")
     st.caption(f"Model: `{PRIMARY_MODEL}`  \nFallback: `{FALLBACK_MODEL}`")
     st.caption("Fleet data: historical, Jan 2021 – Aug 2024. Weather: live.")

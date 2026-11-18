@@ -126,14 +126,14 @@ streamlit run app.py                    # open http://localhost:8501
 
 **Dispatch Console:** chat with the agent. While it works, a status line shows which source it is checking (fleet database, live weather, SOP library). Every answer has an expandable list of the exact tool calls: the SQL it ran, the coordinates it checked, the SOP clauses it read, and what each returned. Example questions are offered on an empty chat, and a "New conversation" button clears the agent's memory.
 
-**Visitors:** each visitor gets an ID kept in the page URL (`?v=…`), so a refresh keeps their chat, and even after an app restart their conversation is reloaded from the audit log with the agent's memory restored. A notice under the chat box says that conversations are logged. Visitors can optionally enter their name or company, which only the owner sees.
+**Visitors:** each visitor gets an ID kept in the page URL (`?v=…`), so a refresh keeps their chat, and even after an app restart their conversation is reloaded from the audit log with the agent's memory restored. A notice under the chat box says that conversations are logged.
 
 **Audit Log** has two views:
 
 | View | Who | Shows |
 |---|---|---|
 | 👤 My activity | anyone | Only the visitor's **own** conversations as transcripts, plus their raw events and CSV. The filter uses the server-side visitor ID, so there's no input to type someone else's ID into. System-wide totals are shown as counts only. |
-| 🔒 All visitors | owner (`AUDIT_PAGE_PASSWORD`) | Every visitor (name, activity window, question count, first question), each one's conversations as readable transcripts, and the full raw event log with filters and CSV export. |
+| 🔒 All visitors | owner (`AUDIT_PAGE_PASSWORD`) | Every visitor (visitor ID, activity window, question count, first question), each one's conversations as readable transcripts, and the full raw event log with filters and CSV export. |
 
 | Protection | How |
 |---|---|

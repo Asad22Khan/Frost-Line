@@ -109,8 +109,8 @@ def _login(expected: str) -> None:
 
 
 def _visitor_name(row) -> str:
-    who = row.visitor if isinstance(row.visitor, str) else "Anonymous"
-    return f"{who}  ·  {row.session_id}  ·  {plural(int(row.questions), 'question')}  ·  last seen {row.last_seen:%b %d %H:%M}"
+    who = f"{row.visitor}  ·  " if isinstance(row.visitor, str) else ""
+    return f"{who}{row.session_id}  ·  {plural(int(row.questions), 'question')}  ·  last seen {row.last_seen:%b %d %H:%M}"
 
 
 def _all_visitors(hours: int | None) -> None:
@@ -136,7 +136,7 @@ def _all_visitors(hours: int | None) -> None:
             st.dataframe(
                 sessions, hide_index=True, width="stretch", height=260,
                 column_config={
-                    "visitor": st.column_config.TextColumn("Visitor (name / company)"),
+                    "visitor": st.column_config.TextColumn("Name (earlier visits)"),
                     "first_seen": st.column_config.DatetimeColumn("First seen (UTC)", format="MMM DD HH:mm"),
                     "last_seen": st.column_config.DatetimeColumn("Last seen (UTC)", format="MMM DD HH:mm"),
                     "first_question": st.column_config.TextColumn("First question", width="large"),

@@ -58,8 +58,7 @@ def _answer(question: str) -> None:
         steps: dict[str, dict] = {}
         final = {"role": "assistant", "kind": "error", "content": "No answer was produced."}
         with st.status("Thinking ...", expanded=False) as status:
-            for event in run_turn(question, st.session_state.session_id, st.session_state.thread_id,
-                                  st.session_state.get("visitor_label")):
+            for event in run_turn(question, st.session_state.session_id, st.session_state.thread_id):
                 if event["type"] == "tool_call":
                     steps[event["id"]] = {"tool": event["tool"], "args": event["args"], "output": None}
                     icon, label = TOOL_LABELS.get(event["tool"], ("🔧", event["tool"]))
