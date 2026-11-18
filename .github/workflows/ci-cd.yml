@@ -58,7 +58,7 @@ jobs:
       contents: write
     environment:
       name: production
-      url: https://frostline.streamlit.app
+      url: https://frostline-ai.streamlit.app
     steps:
       - uses: actions/checkout@v5
         with:

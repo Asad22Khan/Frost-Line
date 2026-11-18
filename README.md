@@ -2,9 +2,9 @@
 
 **AI copilot for cold-chain logistics. See every shipment's temperature, risk and rule in one chat.**
 
-FrostLine lets dispatchers and operations managers talk to their fleet data in plain English. You don't need to learn a dashboard. It connects to a legacy telemetry database, checks live weather along the route, and looks up the company's standard operating procedures (SOPs). Every answer cites the rule it came from.
+🚀 **Live demo:** [frostline-ai.streamlit.app](https://frostline-ai.streamlit.app) (free hosting: if the app has been idle, it takes about 30 seconds to wake up)
 
-> 🚧 Work in progress. This README grows as each phase is built.
+FrostLine lets dispatchers and operations managers talk to their fleet data in plain English. You don't need to learn a dashboard. It connects to a legacy telemetry database, checks live weather along the route, and looks up the company's standard operating procedures (SOPs). Every answer cites the rule it came from.
 
 ## The problem
 
@@ -152,7 +152,7 @@ push to main ─► GitHub Actions ─┬─ unit tests (offline)
                 both pass ──────► move the `deploy` branch to this commit ─► Streamlit Community Cloud publishes it
 ```
 
-- **Hosting:** Streamlit Community Cloud (free). It builds from `requirements.txt` on the `deploy` branch, which only GitHub Actions moves. A commit with failing tests can never go live.
+- **Hosting:** Streamlit Community Cloud (free), live at https://frostline-ai.streamlit.app. It builds from `requirements.txt` on the `deploy` branch, which only GitHub Actions moves. A commit with failing tests can never go live.
 - **Secrets:** set in the Streamlit Cloud app settings. The live app gets only `AGENT_DATABASE_URL` (read-only role), `AUDIT_DATABASE_URL` (append-only role), `PINECONE_API_KEY`, `GROQ_API_KEY` and `AUDIT_PAGE_PASSWORD`. The database owner credential is never deployed.
 - **Docker:** the same app also runs as a container on any Docker host:
 
