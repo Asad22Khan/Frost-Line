@@ -23,3 +23,6 @@ Thumbs.db
 
 # Streamlit local secrets
 .streamlit/secrets.toml
+
+# Personal notes
+Link_to_share.txt
