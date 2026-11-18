@@ -17,7 +17,7 @@ A Southern California logistics company stores years of fleet telemetry in a leg
 - [x] **Phase 2:** Data security: read-only agent role over a semantic view
 - [x] **Phase 3:** Agent tools: text-to-SQL, live corridor weather, SOP search
 - [x] **Phase 4:** LangGraph ReAct orchestrator
-- [ ] **Phase 5:** Streamlit dispatch console with an in-database audit log
+- [x] **Phase 5:** Streamlit dispatch console with an in-database audit log
 - [ ] **Phase 6:** Free cloud deployment with CI/CD
 
 ## Getting started
@@ -115,7 +115,27 @@ START → reasoner ──tool calls?──► tools ──► reasoner ──►
 | Runaway loops | At most 6 tool rounds per question, after which the LLM must answer with what it has. A hard recursion limit backs this up. |
 | Memory | Each conversation has a `thread_id`, and follow-up questions see earlier turns. Only the last 6 questions are sent to the LLM, cut at question boundaries so a tool call is never separated from its result. |
 
-The test cases cover a question that needs all three tools, an SOP question about something the SOP doesn't define (Tier 1), a request for live data that doesn't exist, a named shipment (the data has no IDs), a prompt-injection attempt to delete data, and a follow-up question that relies on memory.
+The live test cases cover a question that needs all three tools, an SOP question about something the SOP doesn't define (Tier 1), a request for live data that doesn't exist, a named shipment (the data has no IDs), a prompt-injection attempt to delete data, and a follow-up question that relies on memory.
+
+### Phase 5: dispatch console and audit log
+
+```bash
+python scripts/setup_audit.py           # create the audit log and its role, then verify the permissions
+streamlit run app.py                    # open http://localhost:8501
+```
+
+**Dispatch Console:** chat with the agent. While it works, a status line shows which source it is checking (fleet database, live weather, SOP library). Every answer has an expandable list of the exact tool calls: the SQL it ran, the coordinates it checked, the SOP clauses it read, and what each returned. Example questions are offered on an empty chat, and a "New conversation" button clears the agent's memory.
+
+**Audit Log:** a password-protected page listing every question, tool call, tool result, answer, blocked input and error. It shows summary metrics (sessions, questions, tool calls, blocked inputs, rejected SQL, errors, average answer time), filters by time, event type and session, can replay a single question step by step, and exports to CSV.
+
+| Protection | How |
+|---|---|
+| Input guard | Messages over 1,500 characters are refused. Others are screened by Llama Prompt Guard 2 (free on Groq, about 0.1 s) and blocked above a 0.9 injection score. Blocked inputs never reach the agent and are logged. |
+| Rate limit | 8 questions per minute per browser session |
+| Audit role | The log is written by application code, never by the LLM, through `fde_audit_app`, which can only `INSERT` and `SELECT` the log table. It has no access to telemetry. The agent's role cannot see the audit schema at all. |
+| Append-only log | No `UPDATE`/`DELETE`/`TRUNCATE` grants, plus triggers that reject those operations even for the database owner |
+| No owner credentials in the app | The app holds only `AGENT_DATABASE_URL` and `AUDIT_DATABASE_URL`. The audit page is unlocked with a separate app password (`AUDIT_PAGE_PASSWORD`), compared in constant time, with a 5-minute lockout after 5 failed attempts. |
+| Logging never breaks chat | Events for a question are buffered and written in one round trip when the question finishes, including when it fails. If the audit database is unreachable, the chat still answers and the failure is logged on the server. |
 
 ## Data
 

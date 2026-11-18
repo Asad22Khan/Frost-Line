@@ -1,0 +1,13 @@
+[server]
+headless = true
+fileWatcherType = "none"
+maxUploadSize = 1
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+primaryColor = "#1f6fb2"

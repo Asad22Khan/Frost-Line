@@ -19,3 +19,7 @@ requests==2.34.2
 # --- agent orchestration ---
 langgraph==1.2.22
 langchain-groq==1.2.0
+groq==1.7.0
+
+# --- web app ---
+streamlit==1.67.0

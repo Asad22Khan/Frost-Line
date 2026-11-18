@@ -15,6 +15,7 @@ MAX_ATTEMPTS = 4
 ROLE_SETTINGS = {
     "admin": "DATABASE_URL",  # owner role, used only by setup scripts
     "agent": "AGENT_DATABASE_URL",  # read-only role used by the AI agent
+    "audit": "AUDIT_DATABASE_URL",  # append-only audit log role used by application code
 }
 
 
